@@ -40,9 +40,9 @@ d = sorted(d, key = lambda x: x[0])
 # - 0 begins, 1 falls, 2 wakes
 # - event minute
 
-print(d[:5])
+#print(d[:5])
 
-m = [ [] for i in range(0, 60) ]
+m = [ [] for i in range(0, 59) ]
 durations = {}
 
 current_id = None
@@ -71,12 +71,17 @@ durations = sorted([(k, v) for k, v in durations.items()], key=lambda x: x[1], r
 #print(durations)
 
 longest_sleeper = durations[0][0]
-print(longest_sleeper)
+#print(longest_sleeper)
+m2 = sorted([ (len([x for x in m[i] if x == longest_sleeper ]), i) for i in range(0, len(m)) ], key=lambda x:x[0], reverse=True)
 
-#from collections import Counter
-#m = [ (Counter(m[i]), i) for i in range(0, len(m)) ]
-m = sorted([ (len([x for x in m[i] if x == longest_sleeper ]), i) for i in range(0, len(m)) ], key=lambda x:x[0], reverse=True)
+print(m2[0][1] * longest_sleeper)
 
-print(m[0][1] * longest_sleeper)
 
-#sorted( [ ( i, m[0] )  for i in ragne(0, len(m)) ] )
+# task 2
+
+from collections import Counter
+m3 = [ (Counter(m[i]).most_common(1)[0], i) for i in range(0, len(m)) ]
+m3 = sorted(m3, key = lambda x: x[0][1], reverse=True)
+m3 = m3[0]
+
+print(m3[0][0] * m3[1])
