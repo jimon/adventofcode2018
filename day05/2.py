@@ -1,5 +1,5 @@
-d = [x.strip() for x in open("input1.txt").readlines()]
-d = list(d[0])
+org_d = [x.strip() for x in open("input1.txt").readlines()]
+org_d = list(org_d[0])
 
 def match(x, y):
     if x is None or y is None:
@@ -20,16 +20,11 @@ def solve(d):
         d = [x for x in d if x is not None]
     return len(d)
 
-def drop(d, l):
-    l = l.lower()
-    for i in range(0, len(d)):
-        if d[i] is not None and d[i].lower() == l:
-            d[i] = None
-    return [x for x in d if x is not None]
 
-#d = ['a', 'A', 'b', 'B', 'C', 'D', 'C']
+#org_d = ['a', 'A', 'b', 'B', 'C', 'D', 'C']
 
-s = sorted([(x, solve(drop(d, x))) for x in list('abcdefghijklmnopqrstuvwxyz')], key = lambda x: x[1], reverse = True)
+s = [(x, solve([y for y in org_d if y.lower() != x.lower()])) for x in list('abcdefghijklmnopqrstuvwxyz')]
+s = sorted(s, key = lambda x: x[1])
 print(s)
 
 
