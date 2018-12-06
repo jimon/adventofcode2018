@@ -38,19 +38,31 @@ def find_d(x, y, d):
             else:
                 closest = [p[0]]
                 closest_dist = k
-    return (closest, closest_dist)
+
+    return (None, 0) if len(closest) > 1 else (closest[0], closest_dist)
 
 m = [ [ find_d(x, y, d) for y in range(0, h) ] for x in range(0, w)]
 
+def dot_is_unbound(x, y, m):
+    index = m[x][y][0]
+    l = [m[x2][y][0] == index for x2 in range(0, x)]
+    t = [m[x][y2][0] == index for y2 in range(0, y)]
+    r = [m[x2][y][0] == index for x2 in range(x + 1, w)]
+    b = [m[x][y2][0] == index for y2 in range(y + 1, h)]
+    return any([all(l), all(t), all(r), all(b)])
+
+#print(dot_is_unbound(2, 2, m))
+m = [ [ (None, 0) if dot_is_unbound(x, y, m) else m[x][y] for y in range(0, h) ] for x in range(0, w)]
+
 def index_to_str(x, y, d, m):
     index = m[x][y][0]
-    if len(index) >= 2:
+    if index is None:
         return '.'
     else:
         if any([1 for p in d if p[1] == x and p[2] == y]):
-            return chr(ord('A') + index[0] % 26)
+            return chr(ord('A') + index % 26)
         else:
-            return chr(ord('a') + index[0] % 26)
+            return chr(ord('a') + index % 26)
 
 for y in range(0, h):
     print(''.join([index_to_str(x, y, d, m) for x in range(0, w)]))
