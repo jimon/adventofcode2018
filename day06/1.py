@@ -54,16 +54,21 @@ def dot_is_unbound(x, y, m):
 #print(dot_is_unbound(2, 2, m))
 m = [ [ (None, 0) if dot_is_unbound(x, y, m) else m[x][y] for y in range(0, h) ] for x in range(0, w)]
 
-def index_to_str(x, y, d, m):
-    index = m[x][y][0]
-    if index is None:
-        return '.'
-    else:
-        if any([1 for p in d if p[1] == x and p[2] == y]):
-            return chr(ord('A') + index % 26)
-        else:
-            return chr(ord('a') + index % 26)
+sq = [(index, len([  m[x][y][0] for x in range(0, w) for y in range(0, h) if m[x][y][0] == index ])) for index in set([m[x][y][0] for x in range(0, w) for y in range(0, h)]) if index is not None]
+sq = sorted(sq, key=lambda x: x[1], reverse=True)
 
-for y in range(0, h):
-    print(''.join([index_to_str(x, y, d, m) for x in range(0, w)]))
+print(sq[0][1])
+
+# def index_to_str(x, y, d, m):
+#     index = m[x][y][0]
+#     if index is None:
+#         return '.'
+#     else:
+#         if any([1 for p in d if p[1] == x and p[2] == y]):
+#             return chr(ord('A') + index % 26)
+#         else:
+#             return chr(ord('a') + index % 26)
+
+# for y in range(0, h):
+#     print(''.join([index_to_str(x, y, d, m) for x in range(0, w)]))
 
