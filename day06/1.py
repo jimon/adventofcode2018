@@ -9,8 +9,8 @@ def parse(i, x):
     g = k.groups()
     return (i, int(g[0]), int(g[1]))
 
-#d = [parse(i, x.strip()) for i, x in enumerate(open("input1.txt").readlines())]
-d = [(0, 1, 1), (1, 1, 6), (2, 8, 3), (3, 3, 4), (4, 5, 5), (5, 8, 9)]
+d = [parse(i, x.strip()) for i, x in enumerate(open("input1.txt").readlines())]
+#d = [(0, 1, 1), (1, 1, 6), (2, 8, 3), (3, 3, 4), (4, 5, 5), (5, 8, 9)]
 
 min_x = min([x[1] for x in d])
 max_x = max([x[1] for x in d])
@@ -23,6 +23,8 @@ if 0:
 else:
     w = max_x + 2
     h = max_y + 2
+
+print('d0')
 
 def dist(x0, y0, x1, y1):
     return abs(y1 - y0) + abs(x1 - x0)
@@ -43,6 +45,8 @@ def find_d(x, y, d):
 
 m = [ [ find_d(x, y, d) for y in range(0, h) ] for x in range(0, w)]
 
+print('d1')
+
 def dot_is_unbound(x, y, m):
     index = m[x][y][0]
     l = [m[x2][y][0] == index for x2 in range(0, x)]
@@ -54,8 +58,14 @@ def dot_is_unbound(x, y, m):
 #print(dot_is_unbound(2, 2, m))
 m = [ [ (None, 0) if dot_is_unbound(x, y, m) else m[x][y] for y in range(0, h) ] for x in range(0, w)]
 
+print('d2')
+
 sq = [(index, len([  m[x][y][0] for x in range(0, w) for y in range(0, h) if m[x][y][0] == index ])) for index in set([m[x][y][0] for x in range(0, w) for y in range(0, h)]) if index is not None]
+
+print('d3')
+
 sq = sorted(sq, key=lambda x: x[1], reverse=True)
+
 
 print(sq[0][1])
 
