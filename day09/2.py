@@ -1,5 +1,4 @@
 import re
-import numpy as np
 
 def parse(org):
 	g = re.match(r"""(\d+) players; last marble is worth (\d+) points""", org)
@@ -7,9 +6,9 @@ def parse(org):
 
 class ll:
 	def __init__(self, max_size):
-		self.v = np.array(np.zeros(max_size), dtype=np.uint32)
-		self.l = np.array(np.zeros(max_size), dtype=np.uint32)
-		self.r = np.array(np.zeros(max_size), dtype=np.uint32)
+		self.v = [0 for i in range(0, max_size)]
+		self.l = [0 for i in range(0, max_size)]
+		self.r = [0 for i in range(0, max_size)]
 		self.v[0] = 0
 		self.l[0] = 0
 		self.r[0] = 0
