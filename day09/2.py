@@ -5,49 +5,106 @@ def parse(org):
 	g = re.match(r"""(\d+) players; last marble is worth (\d+) points""", org)
 	return (int(g.groups()[0]), int(g.groups()[1]))
 
+class ll:
+	def __init__(self, max_size):
+		self.v = np.array([-1 for i in range(0, max_size)], dtype=np.int64)
+		self.l = np.array([-1 for i in range(0, max_size)], dtype=np.int32)
+		self.r = np.array([-1 for i in range(0, max_size)], dtype=np.int32)
+		self.v[0] = 0
+		self.l[0] = 0
+		self.r[0] = 0
+		self.c    = 0
+		self.free = set([i for i in range(1, max_size)])
+
+	def value(self):
+		return self.v[self.c]
+
+	def skip(self, n):
+		if n > 0:
+			for i in range(0, n):
+				self.c = self.r[self.c]
+		elif n < 0:
+			for i in range(0, -n):
+				self.c = self.l[self.c]
+
+	def add(self, value):
+		n = self.free.pop()
+		self.v[n] = value
+
+		l = self.c
+		r = self.r[self.c]
+
+		self.l[n] = l
+		self.r[n] = r
+
+		self.l[r] = n
+		self.r[l] = n
+
+		self.c = n
+
+	def remove(self):
+		n = self.c
+		l = self.l[n]
+		r = self.r[n]
+
+		self.l[r] = l
+		self.r[l] = r
+
+		self.v[n] = -1
+		self.l[n] = -1
+		self.r[n] = -1
+		self.free.add(n)
+
+		self.c = r
+
+	def print(self):
+		index = 0
+		result = []
+		while True:
+			result.append(self.v[index])
+			index = self.r[index]
+			if index == 0:
+				break
+		print(' '.join([('(%u)' if m == self.v[self.c] else '%u') % (m) for m in result  ]))
+
 def game(players_count, marble_count):
 	current_player = 0
-	current_marble = 0
 	player_score = [0 for x in range(0, players_count)]
-	marbles = np.array(np.zeros(marble_count), dtype=np.uint32)
-	marbles_length = 1
+	l = ll(marble_count)
 
-	#print(marble_count)
 	for marble in range(1, marble_count + 1):
 		if marble % 50000 == 0:
 			print(float(marble) / float(marble_count))
+
 		current_player = (current_player + 1) % players_count
 
 		if marble % 23:
-			current_marble = ((current_marble + 1) % marbles_length) + 1
-			np.copyto(marbles[current_marble+1:marbles_length+1], marbles[current_marble:marbles_length], casting='unsafe')
-			marbles[current_marble] = marble
-			marbles_length += 1
-		else:
-			current_marble = ((current_marble - 7) % marbles_length)
-			player_score[current_player] += marble
-			player_score[current_player] += marbles[current_marble]
-			np.copyto(marbles[current_marble:marbles_length], marbles[current_marble+1:marbles_length+1], casting='unsafe')
-			marbles_length -= 1
+			l.skip(1)
+			l.add(marble)
 
-		#print("[%u] %s" % (current_player + 1, ''.join([ ('(%u)' if i == current_marble else ' %u ') % (m) for i, m in enumerate(marbles)  ])))
+		else:
+			l.skip(-7)
+
+			player_score[current_player] += marble
+			player_score[current_player] += l.value()
+
+			l.remove()
+
+		#l.print()
 
 	return sorted(player_score, reverse=True)[0]
 
+test_data = [
+	(9, 25, 32),
+	(10, 1618, 8317),
+	(13, 7999, 146373),
+	(17, 1104, 2764),
+	(21, 6111, 54718),
+	(30, 5807, 37305),
+]
 
-#print(game(9, 25))
-
-# test_data = [
-# 	(9, 25, 32),
-# 	(10, 1618, 8317),
-# 	(13, 7999, 146373),
-# 	(17, 1104, 2764),
-# 	(21, 6111, 54718),
-# 	(30, 5807, 37305),
-# ]
-
-# for t in test_data:
-# 	print(game(t[0], t[1]) == t[2])
+for t in test_data:
+	print(game(t[0], t[1]) == t[2])
 
 players_count, marble_count = parse(open("input1.txt").readline())
 print(game(players_count, marble_count * 100))
