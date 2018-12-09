@@ -7,14 +7,20 @@ def parse(org):
 
 class ll:
 	def __init__(self, max_size):
-		self.v = np.array([-1 for i in range(0, max_size)], dtype=np.int64)
-		self.l = np.array([-1 for i in range(0, max_size)], dtype=np.int32)
-		self.r = np.array([-1 for i in range(0, max_size)], dtype=np.int32)
+		self.v = np.array(np.zeros(max_size), dtype=np.uint32)
+		self.l = np.array(np.zeros(max_size), dtype=np.uint32)
+		self.r = np.array(np.zeros(max_size), dtype=np.uint32)
 		self.v[0] = 0
 		self.l[0] = 0
 		self.r[0] = 0
 		self.c    = 0
-		self.free = set([i for i in range(1, max_size)])
+
+		self.free = 1
+		for i in range(1, max_size):
+			self.l[i] = i - 1
+			self.r[i] = i + 1
+		self.l[1] = max_size - 1
+		self.r[max_size - 1] = 0
 
 	def value(self):
 		return self.v[self.c]
@@ -28,12 +34,17 @@ class ll:
 				self.c = self.l[self.c]
 
 	def add(self, value):
-		n = self.free.pop()
-		self.v[n] = value
+		n = self.free
+		lf = self.l[n]
+		rf = self.r[n]
+		self.l[rf] = lf
+		self.r[lf] = rf
+		self.free = rf
 
 		l = self.c
 		r = self.r[self.c]
 
+		self.v[n] = value
 		self.l[n] = l
 		self.r[n] = r
 
@@ -53,12 +64,18 @@ class ll:
 		self.v[n] = -1
 		self.l[n] = -1
 		self.r[n] = -1
-		self.free.add(n)
+
+		lf = self.free
+		rf = self.r[self.free]
+		self.l[n] = lf
+		self.r[n] = rf
+		self.r[lf] = n
+		self.l[rf] = n
+		self.free = n
 
 		self.c = r
 
 	def print(self):
-		index = 0
 		result = []
 		while True:
 			result.append(self.v[index])
@@ -89,8 +106,6 @@ def game(players_count, marble_count):
 			player_score[current_player] += l.value()
 
 			l.remove()
-
-		#l.print()
 
 	return sorted(player_score, reverse=True)[0]
 
