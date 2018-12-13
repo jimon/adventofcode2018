@@ -3,7 +3,6 @@ w = len(idata[0])
 h = len(idata)
 idata = [x[:w] for x in idata]
 
-
 def getxy(grid, x, y):
 	if x < 0 or y < 0 or x >= w or y >= h:
 		return None
@@ -68,7 +67,7 @@ for y in range(0, h):
 	for x in range(0, w):
 		cell = getxy(idata, x, y)
 		if cell in char_crt:
-			carts.append((x, y, cell))
+			carts.append((x, y, cell, '<'))
 
 def nextcoord(x1, y1, d):
 	if d == '<':
@@ -88,12 +87,38 @@ def sim(carts, m):
 		x = cart[0]
 		y = cart[1]
 		d = cart[2]
+		e = cart[3]
 
 		x, y = nextcoord(x, y, d)
 		c = m[xytoi(x, y)]
 		if c == '+':
-			#d = 
-			pass
+			if e == '<':
+				if d == '<':
+					d = 'v'
+				elif d == '^':
+					d = '<'
+				elif d == '>':
+					d = '^'
+				elif d == 'v':
+					d = '>'
+			elif e == '^':
+				pass
+			elif e == '>':
+				if d == '<':
+					d = '^'
+				elif d == '^':
+					d = '>'
+				elif d == '>':
+					d = 'v'
+				elif d == 'v':
+					d = '<'
+
+			if e == '<':
+				e = '^'
+			elif e == '^':
+				e = '>'
+			elif e == '>':
+				e = '<'
 		elif d == '>':
 			if c == '-':
 				d = '>'
@@ -130,21 +155,25 @@ def sim(carts, m):
 				d = '<'
 			else:
 				assert(False)
-
-		carts2.append((x, y, d))
-
+		carts2.append((x, y, d, e))
 
 	return carts2
 
 
 def deb(i, carts, m):
 	print('----- iteration %03u' % i)
-	carts_dict = { (x, y): d for x, y, d in carts }
+	carts_dict = { (x, y): d for x, y, d, e in carts }
 	#print(carts_dict)
 	for y in range(0, h):
 		print(''.join([carts_dict.get((x, y), str(k)) for x, k in enumerate(m[xytoi(0, y):xytoi(0, y + 1)])]))
 
-for i in range(0, 10):
-	if i > 0:
-		carts = sim(carts, m)
-	deb(i, carts, m)
+while True:
+	carts = sim(carts, m)
+	seen = set([])
+	for cart in carts:
+		p = (cart[0], cart[1])
+		if p in seen:
+			print('collision at %u,%u' % (p[0], p[1]))
+			exit(0)
+		else:
+			seen.add(p)
