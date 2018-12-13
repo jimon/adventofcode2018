@@ -1,4 +1,4 @@
-idata = [x.rstrip('\n') for x in open('inputk.txt').readlines()]
+idata = [x.rstrip('\n') for x in open('input1.txt').readlines()]
 w = len(idata[0])
 h = len(idata)
 idata = [x[:w] for x in idata]
@@ -81,9 +81,31 @@ def nextcoord(x1, y1, d):
 	else:
 		assert(False)
 
+def dirrot90(d):
+	if d == '<':
+		return '^'
+	elif d == '^':
+		return '>'
+	elif d == '>':
+		return 'v'
+	elif d == 'v':
+		return '<'
+
+def dirrot270(d):
+	if d == '<':
+		return 'v'
+	elif d == '^':
+		return '<'
+	elif d == '>':
+		return '^'
+	elif d == 'v':
+		return '>'
+
 def sim(carts, m):
+	carts = sorted(carts, key = lambda x: xytoi(x[0], x[1]))
 	carts2 = []
-	for cart in sorted(carts, key = lambda x: xytoi(x[0], x[1])):
+
+	for index, cart in enumerate(carts):
 		x = cart[0]
 		y = cart[1]
 		d = cart[2]
@@ -93,25 +115,11 @@ def sim(carts, m):
 		c = m[xytoi(x, y)]
 		if c == '+':
 			if e == '<':
-				if d == '<':
-					d = 'v'
-				elif d == '^':
-					d = '<'
-				elif d == '>':
-					d = '^'
-				elif d == 'v':
-					d = '>'
+				d = dirrot270(d)
 			elif e == '^':
 				pass
 			elif e == '>':
-				if d == '<':
-					d = '^'
-				elif d == '^':
-					d = '>'
-				elif d == '>':
-					d = 'v'
-				elif d == 'v':
-					d = '<'
+				d = dirrot90(d)
 
 			if e == '<':
 				e = '^'
@@ -157,6 +165,16 @@ def sim(carts, m):
 				assert(False)
 		carts2.append((x, y, d, e))
 
+		seen = set([])
+		for cart in carts[index+1:] + carts2:
+			p = (cart[0], cart[1])
+			if p in seen:
+				print('collision at %u,%u' % (p[0], p[1]))
+				exit(0)
+			else:
+				seen.add(p)
+
+
 	return carts2
 
 
@@ -169,11 +187,3 @@ def deb(i, carts, m):
 
 while True:
 	carts = sim(carts, m)
-	seen = set([])
-	for cart in carts:
-		p = (cart[0], cart[1])
-		if p in seen:
-			print('collision at %u,%u' % (p[0], p[1]))
-			exit(0)
-		else:
-			seen.add(p)
