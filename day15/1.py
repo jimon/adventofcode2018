@@ -56,7 +56,7 @@ class Map:
 	def adjacentenemiesof(self, x, y):
 		t = self.get(x, y).getenemytype()
 		units = [Pos(x=x+dx,y=y+dy) for dx, dy in tlrb if self.get(x + dx, y + dy).t == t]
-		return readingordersort(units, self.w)
+		return sorted(units, key=lambda pos: self.get(pos.x, pos.y).h)
 
 	def isunitat(self, x, y):
 		return self.get(x, y).isunit()
@@ -70,6 +70,16 @@ class Map:
 		assert(self.get(to_x, to_y).t == '.')
 		self.m[to_y][to_x] = self.get(from_x, from_y)
 		self.m[from_y][from_x] = Map.Cell('.')
+
+	def tryattack(self, x, y):
+		adjenemies = self.adjacentenemiesof(x, y)
+		if len(adjenemies) > 0:
+			self.attack(adjenemies[0].x, adjenemies[0].y)
+			return True
+		return False
+
+	def allhp(self):
+		return sum([self.get(pos.x,pos.y).h for pos in self.units()])
 
 	def debug(self):
 		print('-----')
@@ -158,112 +168,31 @@ def sim(m):
 			continue
 
 		# attack adj enemies
-		adjenemies = m.adjacentenemiesof(pos.x, pos.y)
-		if len(adjenemies) > 0:
-			m.attack(adjenemies[0].x, adjenemies[0].y)
+		if m.tryattack(pos.x, pos.y):
 			continue
 
 		# list all enemies
 		enemies = m.enemiesof(pos.x, pos.y)
 		if len(enemies) == 0:
-			break
+			return False
 
 		d = DistanceMap(m, pos.x, pos.y, m.get(pos.x, pos.y).getenemytype())
 		enemies_cost = sorted([(d.costto(enemy_pos.x, enemy_pos.y), enemy_pos) for enemy_pos in enemies if d.costto(enemy_pos.x, enemy_pos.y) is not None], key=lambda x: x[0])
 		enemies_cost = [x for x in enemies_cost if x[0] == enemies_cost[0][0]]
 		enemies_cost = sorted(enemies_cost, key=lambda x: x[1].y * d.w + x[0])
 
-		#print(enemies_cost)
-
-		#d.debug()
-
 		if len(enemies_cost) > 0:
 			moving_to_enemy = enemies_cost[0][1]
 			path = d.path(moving_to_enemy.x, moving_to_enemy.y)
-			m.move(pos.x, pos.y, path[0].x, path[0].y)
+			new_pos = path[0]
+			m.move(pos.x, pos.y, new_pos.x, new_pos.y)
+			m.tryattack(new_pos.x, new_pos.y)
+
+	return True
 
 m = Map('inputk.txt')
-m.debug()
-for i in range(0, 48):
-	sim(m)
-	m.debug()
+rounds = 0
+while sim(m):
+	rounds += 1
 
-# def sim(m):
-# 	units = [(m[i][0], m[i][1], i) for i in range(0, w * h) if ischaracter(m[i][0])]
-# 	units = sorted(units, key=lambda k: k[2])
-
-# 	for my_type, my_hp, my_i in units:
-# 		x, y = itoxy(my_i)
-# 		# dead
-# 		if gettype(m, x, y) == '.':
-# 			continue
-
-# 		# TODO faster
-# 		enemy_positions = {
-# 			my_type: sorted([ (x, y) for y in range(0, h) for x in range(0, w) if gettype(m, x, y) == enemy_type],
-# 			key=lambda k: xytoi(k[0], k[0])) for my_type, enemy_type in [('E', 'G'), ('G', 'E')]
-# 		}
-
-# 		if len(enemy_positions.get(my_type)) == 0:
-# 			return False
-
-# 		adj_enemy = [xytoi(x + dx, y + dy) for dx, dy in tlrb if isenemy(my_type, gettype(m, x + dx, y + dy))]
-# 		adj_enemy = sorted(adj_enemy, key=lambda k:(m[k][1], k))
-
-# 		if len(adj_enemy) > 0:
-# 			ei = adj_enemy[0]
-# 			et, eh = m[ei]
-# 			eh -= attack_dmg
-# 			if eh > 0:
-# 				m[ei] = (et, eh)
-# 				print(my_type, 'attacking ', et, 'at', *itoxy(ei))
-# 			else:
-# 				print(my_type, 'killing ', et, 'at', *itoxy(ei))
-# 				m[ei] = ('.', -1)
-
-# 		else:
-# 			f = dijkstra(m, x, y)
-# 			all_reachable = [travelcost(f, enemy_x, enemy_y) for enemy_x, enemy_y in enemy_positions.get(my_type)]
-# 			all_reachable = [k for k in all_reachable if k is not None]
-# 			all_reachable = sorted(all_reachable, key=lambda k: (k[0], k[2]))
-# 			if len(all_reachable) == 0:
-# 				continue
-			
-# 			to_x, to_y = all_reachable[0][1][0]
-
-# 			#if my_type == 'E':
-# 			#	deb([ (str(x if x <= 9 else 9) if x >= 0 else '.', 1) for x, path in f])
-# 			#	print(all_reachable)
-# 			m[my_i] = ('.', -1)
-# 			m[xytoi(to_x, to_y)] = (my_type, my_hp)
-
-# 			print('%s (%u,%u)->(%u,%u)' % (my_type, x, y, to_x, to_y))
-
-# 	return True
-
-# def all_hp(m):
-# 	return sum([m[i][1] for i in range(0, w * h) if m[i][0] in ['G', 'E']])
-
-# deb(m)
-
-# rounds = 0
-# while sim(m):
-# 	rounds += 1
-# 	deb(m)
-# 	#print(rounds, all_hp(m), rounds * all_hp(m))
-# 	#last_m = copy.copy(m)
-
-# 	if rounds >= 29:
-# 		break
-
-#deb(m)
-
-# print(rounds, all_hp(m), rounds * all_hp(m))
-
-#for i in range(0, 48):
-	#sim(m)
-	#deb(m)
-
-# for i in range(0, w * h):
-# 	if m[i][0] in ['G', 'E']:
-# 		print(m[i])
+print(rounds * m.allhp())
