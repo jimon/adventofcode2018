@@ -1,4 +1,4 @@
-start_hp = 5
+start_hp = 200
 attack_dmg = 3
 
 import scipy
@@ -35,14 +35,19 @@ tlrb = [
 	( 0, 1)
 ]
 
+def pathtocost(path):
+	return sum([xytoi(x, y) for x, y in path])
 def dijkstra_fill(m, f, x, y, cost, path):
 	if x < 0 or y < 0 or x >= w or y >= h:
 		return
 	if not isfree(gettype(m, x, y)):
 		return
 	i = xytoi(x, y)
-	if f[i][0] != -1 and f[i][0] <= cost:
+	if f[i][0] != -1 and f[i][0] < cost:
 		return
+	if f[i][0] == cost:
+		if pathtocost(f[i][1]) <= pathtocost(path):
+			return
 	f[i] = (cost, path)
 	for dx, dy in tlrb:
 		dijkstra_fill(m, f, x + dx, y + dy, cost + 1, path + [(x + dx, y + dy)])
@@ -51,7 +56,6 @@ def dijkstra(m, x, y):
 	f[xytoi(x, y)] = (0, [])
 	for dx, dy in tlrb:
 		dijkstra_fill(m, f, x + dx, y + dy, 1, [(x + dx, y + dy)])
-	#deb([ (str(x if x <= 9 else 9) if x >= 0 else '.', 1) for x, path in f])
 	return f
 def dijkstra_cost(f, x, y):
 	return (-1, []) if x < 0 or y < 0 or x >= w or y >= h else f[xytoi(x, y)]
@@ -59,58 +63,62 @@ def travelcost(f, x, y):
 	a = [(*dijkstra_cost(f, x + dx, y + dy), xytoi(x + dx, y + dy)) for dx, dy in tlrb if dijkstra_cost(f, x + dx, y + dy)[0] >= 0]
 	if len(a) == 0:
 		return None
-	return sorted(a, key=lambda x:(x[0], x[2]))[0]
+	b = sorted(a, key=lambda x:(x[0], x[2]))[0]
+	assert(len(b) == 3)
+	return b
 
 def sim(m):
-	enemy_positions = {
-		my_type: sorted(
-			[ (x, y) for y in range(0, h) for x in range(0, w) if gettype(m, x, y) == enemy_type],
-		key=lambda k: xytoi(k[0], k[0])) for my_type, enemy_type in [('E', 'G'), ('G', 'E')]
-	}
+	units = [(m[i][0], m[i][1], i) for i in range(0, w * h) if ischaracter(m[i][0])]
 
-	for y in range(0, h):
-		for x in range(0, w):
-			my_type = gettype(m, x, y)
-			if not ischaracter(my_type):
-				continue
+	for my_type, my_hp, my_i in units:
+		x, y = itoxy(my_i)
+		# dead
+		if gettype(m, x, y) == '.':
+			continue
 
-			adj_enemy = [xytoi(x + dx, y + dy) for dx, dy in tlrb if isenemy(my_type, gettype(m, x + dx, y + dy))]
 
-			# find where to move
-			#if my_type != 'E':
-			#	continue
+		# TODO faster
+		enemy_positions = {
+			my_type: sorted([ (x, y) for y in range(0, h) for x in range(0, w) if gettype(m, x, y) == enemy_type],
+			key=lambda k: xytoi(k[0], k[0])) for my_type, enemy_type in [('E', 'G'), ('G', 'E')]
+		}
 
-			if len(adj_enemy) > 0:
-				#ei = adj_enemy[0]
-				#et, eh, em = m[ei]
-				#eh -= attack_dmg
-				#if eh > 0:
-				#	m[ei] = (et, eh, em)
-				#else:
-				#	m[ei] = ('.', -1, False)
-				pass
+
+		adj_enemy = [xytoi(x + dx, y + dy) for dx, dy in tlrb if isenemy(my_type, gettype(m, x + dx, y + dy))]
+
+		if len(adj_enemy) > 0:
+			ei = adj_enemy[0]
+			et, eh = m[ei]
+			eh -= attack_dmg
+			if eh > 0:
+				m[ei] = (et, eh)
 			else:
+				m[ei] = ('.', -1)
 
-				f = dijkstra(m, x, y)
+		else:
+			f = dijkstra(m, x, y)
+			all_reachable = [travelcost(f, enemy_x, enemy_y) for enemy_x, enemy_y in enemy_positions.get(my_type)]
+			all_reachable = [k for k in all_reachable if k is not None]
+			all_reachable = sorted(all_reachable, key=lambda k: (k[0], k[2]))
+			if len(all_reachable) == 0:
+				continue
+			
+			to_x, to_y = all_reachable[0][1][0]
 
-				all_reachable = [travelcost(f, enemy_x, enemy_y) for enemy_x, enemy_y in enemy_positions.get(my_type)]
-				all_reachable = sorted(all_reachable, key=lambda x: (x[0], x[2]))
+			#if my_type == 'E':
+			#	deb([ (str(x if x <= 9 else 9) if x >= 0 else '.', 1) for x, path in f])
+			#	print(all_reachable)
+			m[my_i] = ('.', -1)
+			m[xytoi(to_x, to_y)] = (my_type, my_hp)
 
-				if len(all_reachable) == 0:
-					continue
-
-				way_x, way_y = all_reachable[0][1][0]
-
-				#mt, mh, mm = m[xytoi(x, y)]
-				#m[xytoi(x, y)] = ('.', -1, False)
-				#m[xytoi(way_x, way_y)] = (mt, mh, True)
+			#print('%s (%u,%u)->(%u,%u)' % (my_type, x, y, to_x, to_y))
 
 
 
 
 
 deb(m)
-for i in range(0, 15):
+for i in range(0, 3):
 	sim(m)
 	deb(m)
 
