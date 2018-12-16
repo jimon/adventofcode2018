@@ -3,7 +3,7 @@ attack_dmg = 3
 
 import scipy
 
-m = [x.strip() for x in open('inputk2.txt').readlines()]
+m = [x.strip() for x in open('input1.txt').readlines()]
 w = len(m[0])
 h = len(m)
 m = [(k, start_hp) if k in ['G', 'E'] else (k, -1) for x in m for k in x]
@@ -69,6 +69,7 @@ def travelcost(f, x, y):
 
 def sim(m):
 	units = [(m[i][0], m[i][1], i) for i in range(0, w * h) if ischaracter(m[i][0])]
+	units = sorted(units, key=lambda k: k[2])
 
 	for my_type, my_hp, my_i in units:
 		x, y = itoxy(my_i)
@@ -76,15 +77,17 @@ def sim(m):
 		if gettype(m, x, y) == '.':
 			continue
 
-
 		# TODO faster
 		enemy_positions = {
 			my_type: sorted([ (x, y) for y in range(0, h) for x in range(0, w) if gettype(m, x, y) == enemy_type],
 			key=lambda k: xytoi(k[0], k[0])) for my_type, enemy_type in [('E', 'G'), ('G', 'E')]
 		}
 
+		if len(enemy_positions.get(my_type)) == 0:
+			return False
 
 		adj_enemy = [xytoi(x + dx, y + dy) for dx, dy in tlrb if isenemy(my_type, gettype(m, x + dx, y + dy))]
+		adj_enemy = sorted(adj_enemy, key=lambda k:(m[k][1], k))
 
 		if len(adj_enemy) > 0:
 			ei = adj_enemy[0]
@@ -92,7 +95,9 @@ def sim(m):
 			eh -= attack_dmg
 			if eh > 0:
 				m[ei] = (et, eh)
+				print(my_type, 'attacking ', et, 'at', *itoxy(ei))
 			else:
+				print(my_type, 'killing ', et, 'at', *itoxy(ei))
 				m[ei] = ('.', -1)
 
 		else:
@@ -111,14 +116,35 @@ def sim(m):
 			m[my_i] = ('.', -1)
 			m[xytoi(to_x, to_y)] = (my_type, my_hp)
 
-			#print('%s (%u,%u)->(%u,%u)' % (my_type, x, y, to_x, to_y))
+			print('%s (%u,%u)->(%u,%u)' % (my_type, x, y, to_x, to_y))
 
+	return True
 
 
 
 
 deb(m)
-for i in range(0, 3):
-	sim(m)
-	deb(m)
 
+rounds = 0
+while sim(m):
+	rounds += 1
+	all_hp = sum([m[i][1] for i in range(0, w * h) if m[i][0] in ['G', 'E']])
+	print(rounds, all_hp)
+
+	#if rounds >= 47:
+	#	break
+
+deb(m)
+
+rounds -= 1
+
+all_hp = sum([m[i][1] for i in range(0, w * h) if m[i][0] in ['G', 'E']])
+print(all_hp, rounds, all_hp * rounds)
+
+#for i in range(0, 48):
+	#sim(m)
+	#deb(m)
+
+for i in range(0, w * h):
+	if m[i][0] in ['G', 'E']:
+		print(m[i])
