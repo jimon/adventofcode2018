@@ -89,16 +89,18 @@ class Map:
 
 class DistanceMap:
 	class DistanceCell:
-		def __init__(self, cost, came_from, w):
-			self.cost = cost
-			self.came_from = came_from
+		def __init__(self, w):
+			self.cost = None
+			self.came_from_x = None
+			self.came_from_y = None
 			self.w = w
-		def visit(self, new_cost, came_from):
+		def visit(self, new_cost, came_from_x, came_from_y):
 			if self.cost is not None and self.cost < new_cost:
 				return False
-			elif self.cost is None or self.cost > new_cost or (self.came_from.y * self.w + self.came_from.x) >= (came_from.y * self.w + came_from.x):
+			elif self.cost is None or self.cost > new_cost or (self.came_from_y * self.w + self.came_from_x) >= (came_from_y * self.w + came_from_x):
 				self.cost = new_cost
-				self.came_from = came_from
+				self.came_from_x = came_from_x
+				self.came_from_y = came_from_y
 				return True
 			else:
 				return False
@@ -109,21 +111,23 @@ class DistanceMap:
 	def __init__(self, m, from_x, from_y, enemy_type):
 		self.w = m.w
 		self.h = m.h
-		self.m = [[DistanceMap.DistanceCell(None, None, self.w) for x in range(0, self.w)] for y in range(0, self.h)]
-		v = set([])
+		self.m = [[DistanceMap.DistanceCell(self.w) for x in range(0, self.w)] for y in range(0, self.h)]
+		v = [[False for x in range(0, self.w)] for y in range(0, self.h)]
 		h = []
-		heappush(h, (0, Pos(x = from_x, y = from_y), None))
+		heappush(h, (0, from_x, from_y, None, None))
 		while len(h):
-			cost, pos, came_from = heappop(h)
-			if self.get(pos.x, pos.y).visit(cost, came_from):
-				v.add(pos)
-				for dx, dy in tlrb:
-					new_pos = Pos(x = pos.x + dx, y = pos.y + dy)
-					if new_pos not in v:
-						if m.get(new_pos.x, new_pos.y).isfree() or (enemy_type is not None and m.get(new_pos.x, new_pos.y).t == enemy_type):
-							heappush(h, (cost + 1, new_pos, pos))
-						else:
-							v.add(pos)
+			cost, x, y, came_from_x, came_from_y = heappop(h)
+			if not self.get(x, y).visit(cost, came_from_x, came_from_y):
+				continue
+			v[y][x] = True
+			for dx, dy in tlrb:
+				nx = x + dx
+				ny = y + dy
+				if v[ny][nx] == False:
+					if m.get(nx, ny).isfree() or m.get(nx, ny).t == enemy_type:
+						heappush(h, (cost + 1, nx, ny, x, y))
+					else:
+						v[ny][nx] = True
 
 	def get(self, x, y):
 		if x < 0 or y < 0 or x >= self.w or y >= self.h:
@@ -143,7 +147,7 @@ class DistanceMap:
 		r = []
 		while c.cost is not None and c.cost > 0:
 			r.append(Pos(x=x, y=y))
-			x, y = c.came_from
+			x, y = c.came_from_x, c.came_from_y
 			c = self.get(x, y)
 		return r[::-1]
 
@@ -163,7 +167,9 @@ class DistanceMap:
 
 
 def sim(m):
-	for pos in m.units():
+	units = m.units()
+	for i, pos in enumerate(units):
+		print('%02u/%02u' % (i, len(units) - 1))
 		if not m.isunitat(pos.x, pos.y):
 			continue
 
@@ -194,5 +200,6 @@ m = Map('inputk.txt')
 rounds = 0
 while sim(m):
 	rounds += 1
+	print('------ round', rounds)
 
 print(rounds * m.allhp())
