@@ -109,30 +109,26 @@ class DistanceMap:
 			return str(self.cost if self.cost <= 9 else 9) if self.cost is not None else '.'
 
 	def __init__(self, m, from_x, from_y, enemy_type):
+		self.m = m
 		self.w = m.w
 		self.h = m.h
-		self.m = [[DistanceMap.DistanceCell(self.w) for x in range(0, self.w)] for y in range(0, self.h)]
-		v = [[False for x in range(0, self.w)] for y in range(0, self.h)]
-		h = []
-		heappush(h, (0, from_x, from_y, None, None))
-		while len(h):
-			cost, x, y, came_from_x, came_from_y = heappop(h)
-			if not self.get(x, y).visit(cost, came_from_x, came_from_y):
-				continue
-			v[y][x] = True
-			for dx, dy in tlrb:
-				nx = x + dx
-				ny = y + dy
-				if v[ny][nx] == False:
-					if m.get(nx, ny).isfree() or m.get(nx, ny).t == enemy_type:
-						heappush(h, (cost + 1, nx, ny, x, y))
-					else:
-						v[ny][nx] = True
+		self.enemy_type = enemy_type
+		self.m2 = [[DistanceMap.DistanceCell(self.w) for x in range(0, self.w)] for y in range(0, self.h)]
+		self.fill(0, from_x, from_y, None, None)
+
+	def fill(self, cost, x, y, came_from_x, came_from_y):
+		if not self.get(x, y).visit(cost, came_from_x, came_from_y):
+			return
+		for dx, dy in tlrb:
+			nx = x + dx
+			ny = y + dy
+			if self.m.get(nx, ny).isfree() or m.get(nx, ny).t == self.enemy_type:
+				self.fill(cost + 1, nx, ny, x, y)
 
 	def get(self, x, y):
 		if x < 0 or y < 0 or x >= self.w or y >= self.h:
 			return DistanceMap.DistanceCell(None, None)
-		return self.m[y][x]
+		return self.m2[y][x]
 
 	def debug(self):
 		print('-----')
@@ -150,21 +146,6 @@ class DistanceMap:
 			x, y = c.came_from_x, c.came_from_y
 			c = self.get(x, y)
 		return r[::-1]
-
-	# def dijkstra(m, x, y):
-	# 	f = [(-1, []) for i in range(0, w * h)]
-	# 	f[xytoi(x, y)] = (0, [])
-	# 	for dx, dy in tlrb:
-	# 		dijkstra_fill(m, f, x + dx, y + dy, 1, [(x + dx, y + dy)])
-	# 	return f
-
-#def itoxy(i):
-#	return i % w, int(i / w)
-#def xytoi(x, y):
-#	return y * w + x
-
-
-
 
 def sim(m):
 	units = m.units()
@@ -196,7 +177,7 @@ def sim(m):
 
 	return True
 
-m = Map('inputk.txt')
+m = Map('input1.txt')
 rounds = 0
 while sim(m):
 	rounds += 1
