@@ -3,7 +3,7 @@ attack_dmg = 3
 
 import scipy
 
-m = [x.strip() for x in open('input1.txt').readlines()]
+m = [x.strip() for x in open('inputk.txt').readlines()]
 w = len(m[0])
 h = len(m)
 m = [(k, start_hp) if k in ['G', 'E'] else (k, -1) for x in m for k in x]
@@ -120,26 +120,24 @@ def sim(m):
 
 	return True
 
-
-
+def all_hp(m):
+	return sum([m[i][1] for i in range(0, w * h) if m[i][0] in ['G', 'E']])
 
 deb(m)
 
 rounds = 0
 while sim(m):
 	rounds += 1
-	all_hp = sum([m[i][1] for i in range(0, w * h) if m[i][0] in ['G', 'E']])
-	print(rounds, all_hp)
+	deb(m)
+	#print(rounds, all_hp(m), rounds * all_hp(m))
+	#last_m = copy.copy(m)
 
-	#if rounds >= 47:
-	#	break
+	if rounds >= 29:
+		break
 
-deb(m)
+#deb(m)
 
-rounds -= 1
-
-all_hp = sum([m[i][1] for i in range(0, w * h) if m[i][0] in ['G', 'E']])
-print(all_hp, rounds, all_hp * rounds)
+print(rounds, all_hp(m), rounds * all_hp(m))
 
 #for i in range(0, 48):
 	#sim(m)
