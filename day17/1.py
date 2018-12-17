@@ -5,7 +5,7 @@ import re
 
 parse_line = re.compile(r"""([xy])=(\d+), ([xy])=(\d+)\.\.(\d+)""")
 
-d = [parse_line.match(x.strip()).groups() for x in open('inputk.txt').readlines()]
+d = [parse_line.match(x.strip()).groups() for x in open('input1.txt').readlines()]
 d = [(x[0], int(x[1]), x[2], int(x[3]), int(x[4])) for x in d]
 d = [((x[1], x[1]) if x[0] == 'x' else (x[3], x[4]), (x[3], x[4]) if x[0] == 'x' else (x[1], x[1])) for x in d]
 
@@ -15,7 +15,7 @@ y0 = 0
 d = [((x[0] - x0, x[1] - x0), (y[0] - y0, y[1] - y0)) for x, y in d]
 
 w = max([x[1] for x, y in d]) + 1 + 1
-h = max([y[1] for x, y in d]) + 1 + 1
+h = max([y[1] for x, y in d]) + 1
 
 def get(m, x, y):
     if x < 0 or y < 0 or x >= w or y >= h:
@@ -74,10 +74,14 @@ def deb(m):
     for y in range(0, h):
         print(''.join(m[y]))
 
-deb(m)
-for i in range(0, 40):
+#deb(m)
+for i in range(0, 1000):
+    if i % 100 == 0:
+        print(i)
     sim(m)
 deb(m)
 
-total = len([get(m, x, y) in ['+', '|', '~'] for y in range(0, h) for x in range(0, w)])
+total = len([1 for y in range(0, h) for x in range(0, w) if get(m, x, y) in ['|', '~']])
 print(total)
+
+# 29068 is too high
