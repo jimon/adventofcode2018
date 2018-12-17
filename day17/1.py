@@ -10,7 +10,7 @@ d = [(x[0], int(x[1]), x[2], int(x[3]), int(x[4])) for x in d]
 d = [((x[1], x[1]) if x[0] == 'x' else (x[3], x[4]), (x[3], x[4]) if x[0] == 'x' else (x[1], x[1])) for x in d]
 
 x0 = min([x[0] for x, y in d]) - 1
-#y0 = min([y[0] for x, y in d])
+y0org = min([y[0] for x, y in d])
 y0 = 0
 d = [((x[0] - x0, x[1] - x0), (y[0] - y0, y[1] - y0)) for x, y in d]
 
@@ -75,13 +75,13 @@ def deb(m):
         print(''.join(m[y]))
 
 #deb(m)
-for i in range(0, 1000):
+for i in range(0, 9000):
     if i % 100 == 0:
         print(i)
     sim(m)
 deb(m)
 
-total = len([1 for y in range(0, h) for x in range(0, w) if get(m, x, y) in ['|', '~']])
+total = len([1 for y in range(0, h) for x in range(0, w) if y >= y0org and get(m, x, y) in ['|', '~']])
 print(total)
 
 # 29068 is too high
