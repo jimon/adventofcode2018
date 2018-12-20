@@ -114,4 +114,7 @@ m.freeze()
 k = max([x for x in m.m if type(x) is int])
 print(k + 1)
 
+k2 = len([x for x in m.m if type(x) is int and x >= 999])
+print(k2)
+
 #m.debug()
