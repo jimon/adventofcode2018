@@ -1,4 +1,4 @@
-import re
+import re, copy
 
 rs1 = re.compile(r"""^Immune System:$""")
 rs2 = re.compile(r"""^Infection:$""")
@@ -96,13 +96,12 @@ def parse(filename):
 			g.in_group_index = c
 	return groups
 
-def play_game(groups):
-	c = 0
+def play_game(groups, boost = 0):
+	for g in groups:
+		if g.immune_system:
+			g.attack_damage += boost
 
-
-	while (len([1 for g in groups if g.immune_system and g.alive]) > 0) and (len([1 for g in groups if g.infection and g.alive]) > 0):
-		c += 1
-
+	while True:
 		will_be_attacked = set([])
 		will_attack = {}
 
@@ -119,26 +118,33 @@ def play_game(groups):
 			will_attack[g.index] = i2
 			will_be_attacked.add(i2)
 
-		if c % 1000 == 0:
-			print('                                                                      ', end='\r')
-			print(c, sum([g.count for g in groups]), will_attack, end = '\r')
-
 		attack_turns = [g.index for g in sorted(groups, key=lambda g: g.initiative, reverse=True)]
+		any_killed = False
 		for i in attack_turns:
 			if i in will_attack:
-				groups[i].attack(groups[will_attack[i]])
+				if groups[i].attack(groups[will_attack[i]]) > 0:
+					any_killed = True
+
+		s1 = sum([g.count for g in groups if g.immune_system and g.alive])
+		s2 = sum([g.count for g in groups if g.infection and g.alive])
+
+		if s1 == 0 or s2 == 0 or not any_killed:
+			return (s1, s2)
 
 
-groups = parse('inputk.txt')
-play_game(groups)
-
-print('------------------------------------')
-print('are we still valid', sum([g.count for g in groups]) == 5216)
+print('are we still valid', play_game(parse('inputk.txt')) == (0, 5216))
 
 groups = parse('input1.txt')
-play_game(groups)
-print('------------------------------------')
-print('result', sum([g.count for g in groups]))
-# 11264 is too high
-# 9737 is too high
-# 8681 is too low
+print('part1', play_game(copy.deepcopy(groups)))
+# 9328 is correct
+
+boost = 0
+while True:
+	boost += 1
+	print(boost)
+	s1, s2 = play_game(copy.deepcopy(groups), boost)
+	if s2 == 0:
+		print(s1)
+		break
+
+# 29 is not correct
